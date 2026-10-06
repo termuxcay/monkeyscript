@@ -1,12 +1,490 @@
 --[[
- .____                  ________ ___.    _____                           __                
- |    |    __ _______   \_____  \\_ |___/ ____\_ __  ______ ____ _____ _/  |_  ___________ 
- |    |   |  |  \__  \   /   |   \| __ \   __\  |  \/  ___// ___\\__  \\   __\/  _ \_  __ \
- |    |___|  |  // __ \_/    |    \ \_\ \  | |  |  /\___ \\  \___ / __ \|  | (  <_> )  | \/
- |_______ \____/(____  /\_______  /___  /__| |____//____  >\___  >____  /__|  \____/|__|   
-         \/          \/         \/    \/                \/     \/     \/                   
-          \_Welcome to LuaObfuscator.com   (Alpha 0.10.9) ~  Much Love, Ferib 
+    MONKEY SUITE // BY: TXBAT
+    V4.3 - Matcha executor (Roblox)
+    - Auto Shoot: cursor aim via manual projection, CONTINUOUS fire (no pulse),
+      character/camera never move. F1 toggles Auto Shoot.
+    - Synthetic-fire aware menu: own trigger never cancels itself, real menu
+      clicks always release the trigger. User mouse movement pauses aim+fire.
+    - Anti Explosions, Panic TP, Save/TP Safe Spot, Fly, NoClip, Infinite Jump
+]]
 
-]]--
+if _G.MonkeySuite and _G.MonkeySuite.Cleanup then pcall(_G.MonkeySuite.Cleanup) end
 
-if (_G.MonkeySuite and _G.MonkeySuite.Cleanup) then pcall(_G.MonkeySuite.Cleanup);end local v0=true;local v1={};local v2=game:GetService("Players");local v3=game:GetService("RunService");local v4=v2.LocalPlayer;local v5=v4:GetMouse();local v6=game.Workspace.CurrentCamera;local v7=4;local v8=22;local v9=0.4;local v10=150;local v11=12;local v12=24;local v13=0.1;local v14=3;local v15=50;local v16=1.5;local v17=112;local function v18(v111,v112,v113) pcall(function() game:GetService("StarterGui"):SetCore("SendNotification",{Title=v111 or "Monkey Suite" ,Text=v112 or "" ,Duration=v113 or 3 });end);end local v19={Minimized=false,AutoShoot=false,AntiBomb=false,InfJump=false,NoClip=false,Fly=false,FlySpeed=60,StatusText=""};local v20,v21,v22=1,2,3;v19.ActiveTab=v20;local v24=(tonumber(_G.MonkeySuiteGen) or 0) + 1 ;_G.MonkeySuiteGen=v24;local v25=0;local v26=false;local v27=false;local v28=0;local v29,v30=nil,nil;local v31=0;local v32=false;local v33=0;local v34,v35= -9999, -9999;local v36,v37=0,0;local v38=false;local function v39() if v38 then pcall(mouse1release);v38=false;end v26=false;end local function v40() if  not v38 then v26=true;pcall(mouse1press);v38=true;end end local function v41() local v114,v115=pcall(function() return v4.leaderstats.Kills.Value;end);if (v114 and v115) then return v115;end return nil;end local function v42() v36=os.clock();local v116=v41();v37=v116 or 0 ;end local function v43() local v117=v41();if  not v117 then return nil;end local v118=os.clock() -v36 ;if (v118<5) then return nil;end return math.floor(((v117-v37)/v118) * 60 );end _G.MonkeySuite={Cleanup=function() v0=false;v19.Fly=false;v19.NoClip=false;v39();for v227,v228 in ipairs(v1) do pcall(function() v228:Remove();end);end v1={};end,State=v19,Set=function(v121,v122) v19[v121]=v122;end,Get=function(v124) return v19[v124];end};local v44={Bg=Color3.fromRGB(13,14,21),HeaderBg=Color3.fromRGB(18,20,30),Border=Color3.fromRGB(42,46,62),BorderGlow=Color3.fromRGB(147,51,234),Box=Color3.fromRGB(22,24,34),BoxBorder=Color3.fromRGB(40,44,60),BoxHover=Color3.fromRGB(32,35,48),HoverBorder=Color3.fromRGB(60,65,85),ActiveBox=Color3.fromRGB(147,51,234),ActiveBdr=Color3.fromRGB(192,132,252),ActiveHov=Color3.fromRGB(168,85,247),TxtMain=Color3.fromRGB(240,243,255),TxtSec=Color3.fromRGB(185,190,205),TxtMuted=Color3.fromRGB(130,135,155),TxtActive=Color3.fromRGB(255,255,255),StatusOn=Color3.fromRGB(74,222,128),TabActive=Color3.fromRGB(40,44,60)};local v45=2;local function v46(v125,v126,v127,v128,v129,v130) local v131=Drawing.new(v125);table.insert(v1,v131);local v132={draw=v131,rx=v126 or 0 ,ry=v127 or 0 ,rw=v128 or 0 ,rh=v129 or 0 ,lastX= -9999,lastY= -9999,lastW= -9999,lastH= -9999,lastColor=nil,lastTrans= -1,lastVis=false,lastFont= -1,lastRadius= -1,lastText=nil};if v130 then for v266,v267 in pairs(v130) do v131[v266]=v267;if (v266=="Color") then v132.lastColor=v267;elseif (v266=="Transparency") then v132.lastTrans=v267;elseif (v266=="Visible") then v132.lastVis=v267;elseif ((v266=="Size") and (type(v267)=="number")) then v132.lastFont=v267;elseif (v266=="Radius") then v132.lastRadius=v267;elseif (v266=="Text") then v132.lastText=v267;end end end return v132;end local function v47(v133,v134,v135) if ((v133.lastX~=v134) or (v133.lastY~=v135)) then v133.lastX,v133.lastY=v134,v135;v133.draw.Position=Vector2.new(v134,v135);end end local function v48(v136,v137,v138) if ((v136.lastW~=v137) or (v136.lastH~=v138)) then v136.lastW,v136.lastH=v137,v138;v136.draw.Size=Vector2.new(v137,v138);end end local function v49(v139,v140) if (v139.lastColor~=v140) then v139.lastColor=v140;v139.draw.Color=v140;end end local function v50(v141,v142) if (v141.lastVis~=v142) then v141.lastVis=v142;v141.draw.Visible=v142;end end local function v51(v143,v144) if (v143.lastText~=v144) then v143.lastText=v144;v143.draw.Text=v144;end end local function v52(v145,v146) if (math.abs(v145.lastRadius-v146 )>0.05) then v145.lastRadius=v146;v145.draw.Radius=v146;end end local v53,v54=350,330;local v55,v56=300,34;local v57,v58,v59,v60=60,80,60,80;local v61=false;local v62,v63=0,0;local v64=v46("Square", -3, -3,v53 + 6 ,v54 + 6 ,{Filled=false,Thickness=1.5,Color=v44.BorderGlow,Transparency=0.65,Visible=true});local v65=v46("Square", -1, -1,v53 + 2 ,v54 + 2 ,{Filled=false,Thickness=1,Rounding=8,Color=v44.Border,Transparency=1,Visible=true});local v66=v46("Square",0,0,v53,v54,{Filled=true,Rounding=8,Color=v44.Bg,Transparency=1,Visible=true});local v67=v46("Square",0,0,v53,42,{Filled=true,Rounding=8,Color=v44.HeaderBg,Transparency=1,Visible=true});local v68=v46("Square",0,42,v53,2,{Filled=true,Color=v44.ActiveBox,Transparency=1,Visible=true});local v69=v46("Circle",17,21,0,0,{Radius=7,Filled=false,Thickness=1.5,Color=v44.ActiveBdr,Transparency=0.8,Visible=true});local v70=v46("Circle",17,21,0,0,{Radius=4,Filled=true,Color=v44.ActiveBdr,Transparency=1,Visible=true});local v71=v46("Text",31,12,0,0,{Size=14,Font=v45,Outline=true,Color=v44.TxtMain,Text="MONKEY SUITE // TXBAT",Visible=true});local v72=v46("Text",v53-30 ,13,0,0,{Size=16,Font=v45,Outline=true,Color=v44.TxtMuted,Text="[-]",Visible=true});local v73=v46("Text",0,15,0,0,{Size=11,Font=v45,Outline=true,Color=v44.StatusOn,Text="",Visible=true});local v74=v46("Square", -2, -2,v55 + 4 ,v56 + 4 ,{Filled=false,Thickness=1.5,Color=v44.BorderGlow,Transparency=0.6,Visible=false});local v75=v46("Square",0,0,v55,v56,{Filled=true,Rounding=8,Color=v44.HeaderBg,Transparency=1,Visible=false});local v76=v46("Square",0,0,v55,v56,{Filled=false,Thickness=1,Rounding=8,Color=v44.ActiveBdr,Transparency=0.9,Visible=false});local v77=v46("Circle",16,17,0,0,{Radius=5,Filled=true,Color=v44.ActiveBdr,Transparency=1,Visible=false});local v78=v46("Text",30,9,0,0,{Size=13,Font=v45,Outline=true,Color=v44.TxtMain,Text="MONKEY SUITE // BY: TXBAT",Visible=false});local v79=v46("Text",v55-32 ,8,0,0,{Size=16,Font=v45,Outline=true,Color=v44.ActiveBdr,Text="[+]",Visible=false});local v80=v46("Circle",0,0,0,0,{Radius=9,Filled=false,Thickness=1.5,Color=v44.ActiveBdr,Transparency=1,Visible=false});local v81=v46("Circle",0,0,0,0,{Radius=2,Filled=true,Color=v44.TxtActive,Transparency=1,Visible=false});local v82={[v20]="MAIN",[v21]="COMBAT",[v22]="MOVEMENT"};local v83={};local v84=(v53-16)/3 ;for v147=1,3 do local v148=8 + ((v147-1) * v84) ;local v149=v46("Square",v148,50,v84-4 ,26,{Filled=true,Rounding=5,Color=v44.Box,Transparency=1,Visible=true});local v150=v46("Text",v148 + 8 ,56,0,0,{Size=12,Font=v45,Outline=true,Color=v44.TxtSec,Text=v82[v147],Visible=true});v83[v147]={box=v149,txt=v150,rx=v148,ry=50,rw=v84-4 ,rh=26};end local v85={};local function v86(v152,v153) local v154=v153.w or (v53-20) ;local v155=v153.h or 32 ;local v156={tab=v152,rx=v153.x or 10 ,ry=v153.y,rw=v154,rh=v155,box=v46("Square",v153.x or 10 ,v153.y,v154,v155,{Filled=true,Rounding=6,Color=v44.Box,Transparency=1,Visible=true}),border=v46("Square",v153.x or 10 ,v153.y,v154,v155,{Filled=false,Thickness=1,Rounding=6,Color=v44.BoxBorder,Transparency=0.85,Visible=true}),label=v46("Text",(v153.x or 10) + 12 ,v153.y + 7 ,0,0,{Size=13,Font=v45,Outline=true,Color=v44.TxtMain,Text=v153.text or "" ,Visible=true}),onClick=v153.onClick};table.insert(v85,v156);return v156;end local v87=nil;local v88=0;local function v89() local v157={};local v158=game.Workspace:FindFirstChild("AoeMarks");if v158 then for v269,v270 in ipairs(v158:GetChildren()) do local v271,v272=pcall(function() return v270.Position;end);local v273,v274=pcall(function() return v270.Size;end);if (v271 and v272 and v273 and v274) then table.insert(v157,{x=v272.X,z=v272.Z,hx=(v274.X/2) + v7 ,hz=(v274.Z/2) + v7 });end end end return v157;end local function v90(v159,v160,v161) for v229,v230 in ipairs(v161) do if ((math.abs(v159-v230.x )<=v230.hx) and (math.abs(v160-v230.z )<=v230.hz)) then return true;end end return false;end local function v91(v162,v163,v164) local v165=game.Workspace:FindFirstChild("ExplosionVFX");if v165 then for v275,v276 in ipairs(v165:GetChildren()) do local v277,v278=pcall(function() return v276.Position;end);if (v277 and v278) then local v298=math.sqrt(((v278.X-v162)^2) + ((v278.Z-v163)^2) );if (v298<v164) then return true;end end end end return false;end local function v92(v166,v167) local v168=math.huge;local v169=game.Workspace:FindFirstChild("ExplosionVFX");if v169 then for v279,v280 in ipairs(v169:GetChildren()) do local v281,v282=pcall(function() return v280.Position;end);if (v281 and v282) then local v299=math.sqrt(((v282.X-v166)^2) + ((v282.Z-v167)^2) );if (v299<v168) then v168=v299;end end end end return v168;end local function v93(v170,v171) local v172=v89();local v173,v174,v175=nil,nil, -1;for v231=0,7 do local v232=(v231/8) * math.pi * 2 ;local v233=v170.X + (math.cos(v232) * v171) ;local v234=v170.Z + (math.sin(v232) * v171) ;if  not v90(v233,v234,v172) then local v283=v92(v233,v234);if (v283>v175) then v175=v283;v173,v174=v233,v234;end if (v283>=25) then return v233,v234;end end end if (v173 and (v175>=10)) then return v173,v174;end return nil,nil;end local function v94(v176) local v177,v178=nil,math.huge;local v179=game.Workspace:FindFirstChild("ExplosionVFX");if (v176 and v179) then for v284,v285 in ipairs(v179:GetChildren()) do local v286,v287=pcall(function() return v285.Position;end);if (v286 and v287) then local v300=(v287-v176.Position).Magnitude;if ((v300>=v11) and (v300<v178) and (v300<v10)) then v178=v300;v177=v287;end end end end return v177,v178;end local function v95(v180) local v181=v6.CFrame.Position;local v182=v6.CFrame.LookVector;local v183=v6.CFrame.RightVector;local v184=v6.CFrame.UpVector;local v185=v6.ViewportSize;local v186=70;pcall(function() v186=v6.FieldOfView;end);local v187=(v185.Y/2)/math.tan(math.rad(v186)/2 ) ;local v188=v180-v181 ;local v189=v182:Dot(v188);if (v189<=0.5) then return nil,nil;end local v190=(v185.X/2) + ((v183:Dot(v188)/v189) * v187) ;local v191=(v185.Y/2) -((v184:Dot(v188)/v189) * v187) ;if ((v190< -100) or (v190>(v185.X + 100)) or (v191< -100) or (v191>(v185.Y + 100))) then return nil,nil;end return v190,v191;end local function v96(v192,v193) if v19.Minimized then return (v192>=v57) and (v192<=(v57 + v55)) and (v193>=v58) and (v193<=(v58 + v56)) ;end return (v192>=v57) and (v192<=(v57 + v53)) and (v193>=v58) and (v193<=(v58 + v54)) ;end local function v97() local v194=v4:FindFirstChild("PlayerGui");local v195=v194 and v194:FindFirstChild("Game") ;if  not v195 then return nil;end for v236,v237 in ipairs(v195:GetDescendants()) do if (v237.ClassName=="TextLabel") then local v288,v289=pcall(function() return v237.Text;end);if (v288 and v289 and string.find(string.lower(v289),"monkey")) then local v301=string.match(v289,"(%d+)");if v301 then return v301;end end end end return nil;end local function v98(v196) if (v196==nil) then v196= not v19.AutoShoot;end v19.AutoShoot=v196;if v196 then v42();v18("Auto Shoot","ON (F1)",2);else v39();v18("Auto Shoot","OFF (F1)",2);end print("F1_TOGGLE AutoShoot="   .. tostring(v19.AutoShoot) );end local v99=v86(v20,{y=88,text="Auto Shoot Monkeys [F1]",onClick=function() v98();end});local v100=v86(v20,{y=126,text="Anti Explosions",onClick=function() v19.AntiBomb= not v19.AntiBomb;if v19.AntiBomb then v18("Anti Explosions","ON - dodging banana AoE",2);end end});local v101=v86(v20,{y=164,text="Panic TP (Safe)",onClick=function() local v199=v4.Character;local v200=v199 and v199:FindFirstChild("HumanoidRootPart") ;if v200 then local v256,v257=v93(v200.Position,30);if v256 then v200.CFrame=CFrame.new(v256,v200.Position.Y + 1 ,v257);v19.StatusText="PANIC: safe spot";else v19.StatusText="PANIC: no safe spot!";end end end});local v102=v86(v21,{y=88,text="Save Safe Spot",onClick=function() local v201=v4.Character;local v202=v201 and v201:FindFirstChild("HumanoidRootPart") ;if v202 then v87={x=v202.Position.X,y=v202.Position.Y,z=v202.Position.Z};v18("Safe Spot","Position saved",2);end end});local v103=v86(v21,{y=126,text="TP Safe Spot",onClick=function() local v203=v4.Character;local v204=v203 and v203:FindFirstChild("HumanoidRootPart") ;if (v204 and v87) then local v258=v89();if (v90(v87.x,v87.z,v258) or v91(v87.x,v87.z,18)) then v19.StatusText="SPOT: unsafe now!";v18("Safe Spot","Danger there - TP blocked",2);else v204.CFrame=CFrame.new(v87.x,v87.y + 1 ,v87.z);v19.StatusText="SPOT: teleported";end elseif  not v87 then v18("Safe Spot","Save a spot first",2);end end});local v104=v86(v22,{y=88,text="Fly (WASD + Space/C)",onClick=function() v19.Fly= not v19.Fly;end});local v105=v86(v22,{y=126,text="NoClip",onClick=function() v19.NoClip= not v19.NoClip;if  not v19.NoClip then local v259=v4.Character;if v259 then for v302,v303 in ipairs(v259:GetChildren()) do if ((v303.ClassName=="Part") or (v303.ClassName=="MeshPart")) then pcall(function() v303.CanCollide=true;end);end end end end end});local v106=v86(v22,{y=164,text="Infinite Jump",onClick=function() v19.InfJump= not v19.InfJump;end});local function v107(v208,v209,v210,v211,v212,v213) return (v208>=v210) and (v208<=(v210 + v212)) and (v209>=v211) and (v209<=(v211 + v213)) ;end local function v108(v214,v215) for v238,v239 in ipairs(v83) do if v107(v214,v215,v57 + v239.rx ,v58 + v239.ry ,v239.rw,v239.rh) then v19.ActiveTab=v238;return true;end end return false;end local function v109(v216,v217) for v240,v241 in ipairs(v85) do if (v241.tab==v19.ActiveTab) then if v107(v216,v217,v57 + v241.rx ,v58 + v241.ry ,v241.rw,v241.rh) then pcall(v241.onClick);return true;end end end return false;end local v110=false;v3.Heartbeat:Connect(function() if (_G.MonkeySuiteGen~=v24) then return;end if v19.NoClip then local v260=v4.Character;if v260 then for v304,v305 in ipairs(v260:GetChildren()) do if ((v305.ClassName=="Part") or (v305.ClassName=="MeshPart")) then if v305.CanCollide then v305.CanCollide=false;end end end end end end);v3.RenderStepped:Connect(function() if (_G.MonkeySuiteGen~=v24) then return;end if  not v19.Fly then return;end local v218=v4.Character;local v219=v218 and v218:FindFirstChild("HumanoidRootPart") ;if  not v219 then return;end local v220=v6.CFrame;local v221,v222=v220.LookVector,v220.RightVector;local v223,v224,v225=0,0,0;if (iskeypressed(87) or iskeypressed(119)) then v223=v223 + v221.X ;v224=v224 + v221.Y ;v225=v225 + v221.Z ;end if (iskeypressed(83) or iskeypressed(115)) then v223=v223-v221.X ;v224=v224-v221.Y ;v225=v225-v221.Z ;end if (iskeypressed(68) or iskeypressed(100)) then v223=v223 + v222.X ;v225=v225 + v222.Z ;end if (iskeypressed(65) or iskeypressed(97)) then v223=v223-v222.X ;v225=v225-v222.Z ;end if (iskeypressed(32) or iskeypressed(32)) then v224=v224 + 1 ;end if (iskeypressed(67) or iskeypressed(99)) then v224=v224-1 ;end local v226=(v223 * v223) + (v224 * v224) + (v225 * v225) ;if (v226>0) then local v261=1/math.sqrt(v226) ;local v262=v19.FlySpeed;v219.AssemblyLinearVelocity=Vector3.new(v223 * v261 * v262 ,v224 * v261 * v262 ,v225 * v261 * v262 );else v219.AssemblyLinearVelocity=Vector3.zero;end end);v18("Monkey Suite V4.3","no HoldFire + safe dodge + cursor",3);print("MONKEY SUITE V4.3 LOADED gen="   .. tostring(v24) );
+local Running = true
+local Drawings = {}
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local LocalPlayer = Players.LocalPlayer
+local Mouse = LocalPlayer:GetMouse()
+local Camera = game.Workspace.CurrentCamera
+
+local DODGE_MARGIN = 4
+local DODGE_DIST = 22
+local DODGE_COOLDOWN = 0.4
+local MAX_ENGAGE_DIST = 150
+local MIN_TARGET_DIST = 12
+local SCREEN_Y_OFFSET = 24
+local AIM_MOVE_THROTTLE = 0.1
+local AIM_MIN_MOVE_PX = 3
+local USER_OVERRIDE_PX = 50
+local USER_OVERRIDE_TIME = 1.5
+local F1_KEY = 112
+
+local function notify(title, text, duration)
+    pcall(function()
+        game:GetService("StarterGui"):SetCore("SendNotification", {
+            Title = title or "Monkey Suite", Text = text or "", Duration = duration or 3 })
+    end)
+end
+
+local State = {
+    Minimized = false,
+    AutoShoot = false,
+    AntiBomb = false,
+    InfJump = false,
+    NoClip = false, Fly = false, FlySpeed = 60,
+    StatusText = "",
+}
+local TAB_MAIN, TAB_COMBAT, TAB_MOVE = 1, 2, 3
+State.ActiveTab = TAB_MAIN
+
+local GEN = (tonumber(_G.MonkeySuiteGen) or 0) + 1
+_G.MonkeySuiteGen = GEN
+
+local MenuBusyUntil = 0
+local ShooterHolding = false
+local syntheticPressActive = false
+local userOverrideUntil = 0
+local expectX, expectY = nil, nil
+local lastScriptMove = 0
+local lastF1 = false
+local lastAimMove = 0
+local lastAimX, lastAimY = -9999, -9999
+local shootTime0, shootKills0 = 0, 0
+
+local isFiring = false
+local function releaseFire()
+    if isFiring then
+        pcall(mouse1release)
+        isFiring = false
+    end
+    ShooterHolding = false
+end
+local function holdFire()
+    if not isFiring then
+        ShooterHolding = true
+        pcall(mouse1press)
+        isFiring = true
+    end
+end
+
+local function readKills()
+    local ok, v = pcall(function() return LocalPlayer.leaderstats.Kills.Value end)
+    if ok and v then return v end
+    return nil
+end
+
+local function armShootStats()
+    shootTime0 = os.clock()
+    local k = readKills()
+    shootKills0 = k or 0
+end
+
+local function killsPerMin()
+    local k = readKills()
+    if not k then return nil end
+    local el = os.clock() - shootTime0
+    if el < 5 then return nil end
+    return math.floor((k - shootKills0) / el * 60)
+end
+
+_G.MonkeySuite = {
+    Cleanup = function()
+        Running = false
+        State.Fly = false; State.NoClip = false
+        releaseFire()
+        for _, d in ipairs(Drawings) do pcall(function() d:Remove() end) end
+        Drawings = {}
+    end,
+    State = State,
+    Set = function(k, v) State[k] = v end,
+    Get = function(k) return State[k] end,
+}
+
+local UI = {
+    Bg = Color3.fromRGB(13, 14, 21), HeaderBg = Color3.fromRGB(18, 20, 30),
+    Border = Color3.fromRGB(42, 46, 62), BorderGlow = Color3.fromRGB(147, 51, 234),
+    Box = Color3.fromRGB(22, 24, 34), BoxBorder = Color3.fromRGB(40, 44, 60),
+    BoxHover = Color3.fromRGB(32, 35, 48), HoverBorder = Color3.fromRGB(60, 65, 85),
+    ActiveBox = Color3.fromRGB(147, 51, 234), ActiveBdr = Color3.fromRGB(192, 132, 252),
+    ActiveHov = Color3.fromRGB(168, 85, 247),
+    TxtMain = Color3.fromRGB(240, 243, 255), TxtSec = Color3.fromRGB(185, 190, 205),
+    TxtMuted = Color3.fromRGB(130, 135, 155), TxtActive = Color3.fromRGB(255, 255, 255),
+    StatusOn = Color3.fromRGB(74, 222, 128),
+    TabActive = Color3.fromRGB(40, 44, 60),
+}
+local UI_FONT = 2
+
+local function WrapDraw(dType, rx, ry, rw, rh, props)
+    local d = Drawing.new(dType)
+    table.insert(Drawings, d)
+    local w = { draw = d, rx = rx or 0, ry = ry or 0, rw = rw or 0, rh = rh or 0,
+        lastX = -9999, lastY = -9999, lastW = -9999, lastH = -9999,
+        lastColor = nil, lastTrans = -1, lastVis = false, lastFont = -1,
+        lastRadius = -1, lastText = nil }
+    if props then
+        for k, v in pairs(props) do
+            d[k] = v
+            if k == "Color" then w.lastColor = v
+            elseif k == "Transparency" then w.lastTrans = v
+            elseif k == "Visible" then w.lastVis = v
+            elseif k == "Size" and type(v) == "number" then w.lastFont = v
+            elseif k == "Radius" then w.lastRadius = v
+            elseif k == "Text" then w.lastText = v end
+        end
+    end
+    return w
+end
+local function SetPos(e, x, y) if e.lastX ~= x or e.lastY ~= y then e.lastX, e.lastY = x, y; e.draw.Position = Vector2.new(x, y) end end
+local function SetSize(e, w, h) if e.lastW ~= w or e.lastH ~= h then e.lastW, e.lastH = w, h; e.draw.Size = Vector2.new(w, h) end end
+local function SetColor(e, c) if e.lastColor ~= c then e.lastColor = c; e.draw.Color = c end end
+local function SetVisible(e, v) if e.lastVis ~= v then e.lastVis = v; e.draw.Visible = v end end
+local function SetText(e, t) if e.lastText ~= t then e.lastText = t; e.draw.Text = t end end
+local function SetRadius(e, r) if math.abs(e.lastRadius - r) > 0.05 then e.lastRadius = r; e.draw.Radius = r end end
+
+local GW, GH = 350, 330
+local MINI_W, MINI_H = 300, 34
+local GuiX, GuiY, TargetX, TargetY = 60, 80, 60, 80
+local isDragging = false
+local dragOffX, dragOffY = 0, 0
+
+local mainGlow   = WrapDraw("Square", -3, -3, GW + 6, GH + 6, { Filled = false, Thickness = 1.5, Color = UI.BorderGlow, Transparency = 0.65, Visible = true })
+local mainBorder = WrapDraw("Square", -1, -1, GW + 2, GH + 2, { Filled = false, Thickness = 1, Rounding = 8, Color = UI.Border, Transparency = 1, Visible = true })
+local mainBg     = WrapDraw("Square", 0, 0, GW, GH, { Filled = true, Rounding = 8, Color = UI.Bg, Transparency = 1, Visible = true })
+local headerBg   = WrapDraw("Square", 0, 0, GW, 42, { Filled = true, Rounding = 8, Color = UI.HeaderBg, Transparency = 1, Visible = true })
+local headerLine = WrapDraw("Square", 0, 42, GW, 2, { Filled = true, Color = UI.ActiveBox, Transparency = 1, Visible = true })
+local statusHalo = WrapDraw("Circle", 17, 21, 0, 0, { Radius = 7, Filled = false, Thickness = 1.5, Color = UI.ActiveBdr, Transparency = 0.8, Visible = true })
+local statusCore = WrapDraw("Circle", 17, 21, 0, 0, { Radius = 4, Filled = true, Color = UI.ActiveBdr, Transparency = 1, Visible = true })
+local titleText  = WrapDraw("Text", 31, 12, 0, 0, { Size = 14, Font = UI_FONT, Outline = true, Color = UI.TxtMain, Text = "MONKEY SUITE // TXBAT", Visible = true })
+local minBtn     = WrapDraw("Text", GW - 30, 13, 0, 0, { Size = 16, Font = UI_FONT, Outline = true, Color = UI.TxtMuted, Text = "[-]", Visible = true })
+local statusHdr  = WrapDraw("Text", 0, 15, 0, 0, { Size = 11, Font = UI_FONT, Outline = true, Color = UI.StatusOn, Text = "", Visible = true })
+
+local miniGlow  = WrapDraw("Square", -2, -2, MINI_W + 4, MINI_H + 4, { Filled = false, Thickness = 1.5, Color = UI.BorderGlow, Transparency = 0.6, Visible = false })
+local miniBg    = WrapDraw("Square", 0, 0, MINI_W, MINI_H, { Filled = true, Rounding = 8, Color = UI.HeaderBg, Transparency = 1, Visible = false })
+local miniBrd   = WrapDraw("Square", 0, 0, MINI_W, MINI_H, { Filled = false, Thickness = 1, Rounding = 8, Color = UI.ActiveBdr, Transparency = 0.9, Visible = false })
+local miniHalo  = WrapDraw("Circle", 16, 17, 0, 0, { Radius = 5, Filled = true, Color = UI.ActiveBdr, Transparency = 1, Visible = false })
+local miniTitle = WrapDraw("Text", 30, 9, 0, 0, { Size = 13, Font = UI_FONT, Outline = true, Color = UI.TxtMain, Text = "MONKEY SUITE // BY: TXBAT", Visible = false })
+local miniPlus  = WrapDraw("Text", MINI_W - 32, 8, 0, 0, { Size = 16, Font = UI_FONT, Outline = true, Color = UI.ActiveBdr, Text = "[+]", Visible = false })
+
+-- custom cursor (the game hides the OS cursor, so draw our own ring over the menu)
+local cursorRing = WrapDraw("Circle", 0, 0, 0, 0, { Radius = 9, Filled = false, Thickness = 1.5, Color = UI.ActiveBdr, Transparency = 1, Visible = false })
+local cursorDot  = WrapDraw("Circle", 0, 0, 0, 0, { Radius = 2, Filled = true, Color = UI.TxtActive, Transparency = 1, Visible = false })
+
+local tabNames = { [TAB_MAIN] = "MAIN", [TAB_COMBAT] = "COMBAT", [TAB_MOVE] = "MOVEMENT" }
+local tabButtons = {}
+local tabW = (GW - 16) / 3
+for i = 1, 3 do
+    local bx = 8 + (i - 1) * tabW
+    local box = WrapDraw("Square", bx, 50, tabW - 4, 26, { Filled = true, Rounding = 5, Color = UI.Box, Transparency = 1, Visible = true })
+    local txt = WrapDraw("Text", bx + 8, 56, 0, 0, { Size = 12, Font = UI_FONT, Outline = true, Color = UI.TxtSec, Text = tabNames[i], Visible = true })
+    tabButtons[i] = { box = box, txt = txt, rx = bx, ry = 50, rw = tabW - 4, rh = 26 }
+end
+
+local Buttons = {}
+local function CreateBtn(tab, opt)
+    local bw = opt.w or (GW - 20)
+    local bh = opt.h or 32
+    local btn = {
+        tab = tab, rx = opt.x or 10, ry = opt.y, rw = bw, rh = bh,
+        box = WrapDraw("Square", opt.x or 10, opt.y, bw, bh, { Filled = true, Rounding = 6, Color = UI.Box, Transparency = 1, Visible = true }),
+        border = WrapDraw("Square", opt.x or 10, opt.y, bw, bh, { Filled = false, Thickness = 1, Rounding = 6, Color = UI.BoxBorder, Transparency = 0.85, Visible = true }),
+        label = WrapDraw("Text", (opt.x or 10) + 12, opt.y + 7, 0, 0, { Size = 13, Font = UI_FONT, Outline = true, Color = UI.TxtMain, Text = opt.text or "", Visible = true }),
+        onClick = opt.onClick,
+    }
+    table.insert(Buttons, btn)
+    return btn
+end
+
+local SavedSpot = nil
+local lastDodge = 0
+
+local function readMarks()
+    local marks = {}
+    local aoe = game.Workspace:FindFirstChild("AoeMarks")
+    if aoe then
+        for _, m in ipairs(aoe:GetChildren()) do
+            local ok1, p = pcall(function() return m.Position end)
+            local ok2, s = pcall(function() return m.Size end)
+            if ok1 and p and ok2 and s then
+                table.insert(marks, { x = p.X, z = p.Z, hx = s.X / 2 + DODGE_MARGIN, hz = s.Z / 2 + DODGE_MARGIN })
+            end
+        end
+    end
+    return marks
+end
+
+local function insideAnyMark(x, z, marks)
+    for _, mk in ipairs(marks) do
+        if math.abs(x - mk.x) <= mk.hx and math.abs(z - mk.z) <= mk.hz then
+            return true
+        end
+    end
+    return false
+end
+
+local function nearCombat(x, z, radius)
+    local ex = game.Workspace:FindFirstChild("ExplosionVFX")
+    if ex then
+        for _, p in ipairs(ex:GetChildren()) do
+            local ok, pp = pcall(function() return p.Position end)
+            if ok and pp then
+                local d = math.sqrt((pp.X - x) ^ 2 + (pp.Z - z) ^ 2)
+                if d < radius then return true end
+            end
+        end
+    end
+    return false
+end
+
+local function combatDist(x, z)
+    local best = math.huge
+    local ex = game.Workspace:FindFirstChild("ExplosionVFX")
+    if ex then
+        for _, p in ipairs(ex:GetChildren()) do
+            local ok, pp = pcall(function() return p.Position end)
+            if ok and pp then
+                local d = math.sqrt((pp.X - x) ^ 2 + (pp.Z - z) ^ 2)
+                if d < best then best = d end
+            end
+        end
+    end
+    return best
+end
+
+local function findEscape(pos, dist)
+    -- NEVER land inside a bomb mark, and NEVER land on top of monkeys:
+    -- pick the direction outside all marks with the most distance from combat.
+    -- If every direction is too close to monkeys, stay put (return nil).
+    local marks = readMarks()
+    local bestCx, bestCz, bestScore = nil, nil, -1
+    for i = 0, 7 do
+        local ang = (i / 8) * math.pi * 2
+        local cx = pos.X + math.cos(ang) * dist
+        local cz = pos.Z + math.sin(ang) * dist
+        if not insideAnyMark(cx, cz, marks) then
+            local cd = combatDist(cx, cz)
+            if cd > bestScore then
+                bestScore = cd
+                bestCx, bestCz = cx, cz
+            end
+            if cd >= 25 then
+                return cx, cz
+            end
+        end
+    end
+    if bestCx and bestScore >= 10 then
+        return bestCx, bestCz
+    end
+    return nil, nil
+end
+
+local function findTarget(hr)
+    -- ignore anything glued to me (my own muzzle flash / weapon tip):
+    -- real monkey combat is always beyond MIN_TARGET_DIST
+    local best, bd = nil, math.huge
+    local ex = game.Workspace:FindFirstChild("ExplosionVFX")
+    if hr and ex then
+        for _, p in ipairs(ex:GetChildren()) do
+            local ok, pos = pcall(function() return p.Position end)
+            if ok and pos then
+                local d = (pos - hr.Position).Magnitude
+                if d >= MIN_TARGET_DIST and d < bd and d < MAX_ENGAGE_DIST then bd = d; best = pos end
+            end
+        end
+    end
+    return best, bd
+end
+
+local function projectToScreen(worldPos)
+    local camPos = Camera.CFrame.Position
+    local camLook = Camera.CFrame.LookVector
+    local camRight = Camera.CFrame.RightVector
+    local camUp = Camera.CFrame.UpVector
+    local vp = Camera.ViewportSize
+    local fovY = 70
+    pcall(function() fovY = Camera.FieldOfView end)
+    local f = (vp.Y / 2) / math.tan(math.rad(fovY) / 2)
+    local off = worldPos - camPos
+    local depth = camLook:Dot(off)
+    if depth <= 0.5 then return nil, nil end
+    local sx = vp.X / 2 + (camRight:Dot(off) / depth) * f
+    local sy = vp.Y / 2 - (camUp:Dot(off) / depth) * f
+    if sx < -100 or sx > vp.X + 100 or sy < -100 or sy > vp.Y + 100 then
+        return nil, nil
+    end
+    return sx, sy
+end
+
+local function cursorOverMenu(mx, my)
+    if State.Minimized then
+        return mx >= GuiX and mx <= GuiX + MINI_W and my >= GuiY and my <= GuiY + MINI_H
+    end
+    return mx >= GuiX and mx <= GuiX + GW and my >= GuiY and my <= GuiY + GH
+end
+
+local function getMonkeysLeft()
+    local pg = LocalPlayer:FindFirstChild("PlayerGui")
+    local g = pg and pg:FindFirstChild("Game")
+    if not g then return nil end
+    for _, c in ipairs(g:GetDescendants()) do
+        if c.ClassName == "TextLabel" then
+            local ok, t = pcall(function() return c.Text end)
+            if ok and t and string.find(string.lower(t), "monkey") then
+                local n = string.match(t, "(%d+)")
+                if n then return n end
+            end
+        end
+    end
+    return nil
+end
+
+local function toggleShoot(on)
+    if on == nil then on = not State.AutoShoot end
+    State.AutoShoot = on
+    if on then
+        armShootStats()
+        notify("Auto Shoot", "ON (F1)", 2)
+    else
+        releaseFire()
+        notify("Auto Shoot", "OFF (F1)", 2)
+    end
+    print("F1_TOGGLE AutoShoot=" .. tostring(State.AutoShoot))
+end
+
+local btnShoot = CreateBtn(TAB_MAIN, { y = 88, text = "Auto Shoot Monkeys [F1]", onClick = function()
+    toggleShoot()
+end })
+local btnDodge = CreateBtn(TAB_MAIN, { y = 126, text = "Anti Explosions", onClick = function()
+    State.AntiBomb = not State.AntiBomb
+    if State.AntiBomb then notify("Anti Explosions", "ON - dodging banana AoE", 2) end
+end })
+local btnPanic = CreateBtn(TAB_MAIN, { y = 164, text = "Panic TP (Safe)", onClick = function()
+    local char = LocalPlayer.Character
+    local hr = char and char:FindFirstChild("HumanoidRootPart")
+    if hr then
+        local cx, cz = findEscape(hr.Position, 30)
+        if cx then
+            hr.CFrame = CFrame.new(cx, hr.Position.Y + 1, cz)
+            State.StatusText = "PANIC: safe spot"
+        else
+            State.StatusText = "PANIC: no safe spot!"
+        end
+    end
+end })
+
+local btnSave = CreateBtn(TAB_COMBAT, { y = 88, text = "Save Safe Spot", onClick = function()
+    local char = LocalPlayer.Character
+    local hr = char and char:FindFirstChild("HumanoidRootPart")
+    if hr then
+        SavedSpot = { x = hr.Position.X, y = hr.Position.Y, z = hr.Position.Z }
+        notify("Safe Spot", "Position saved", 2)
+    end
+end })
+local btnSpot = CreateBtn(TAB_COMBAT, { y = 126, text = "TP Safe Spot", onClick = function()
+    local char = LocalPlayer.Character
+    local hr = char and char:FindFirstChild("HumanoidRootPart")
+    if hr and SavedSpot then
+        local marks = readMarks()
+        if insideAnyMark(SavedSpot.x, SavedSpot.z, marks) or nearCombat(SavedSpot.x, SavedSpot.z, 18) then
+            State.StatusText = "SPOT: unsafe now!"
+            notify("Safe Spot", "Danger there - TP blocked", 2)
+        else
+            hr.CFrame = CFrame.new(SavedSpot.x, SavedSpot.y + 1, SavedSpot.z)
+            State.StatusText = "SPOT: teleported"
+        end
+    elseif not SavedSpot then
+        notify("Safe Spot", "Save a spot first", 2)
+    end
+end })
+
+local btnFly = CreateBtn(TAB_MOVE, { y = 88, text = "Fly (WASD + Space/C)", onClick = function() State.Fly = not State.Fly end })
+local btnNoclip = CreateBtn(TAB_MOVE, { y = 126, text = "NoClip", onClick = function()
+    State.NoClip = not State.NoClip
+    if not State.NoClip then
+        local ch = LocalPlayer.Character
+        if ch then for _, p in ipairs(ch:GetChildren()) do
+            if p.ClassName == "Part" or p.ClassName == "MeshPart" then pcall(function() p.CanCollide = true end) end
+        end end
+    end
+end })
+local btnJump = CreateBtn(TAB_MOVE, { y = 164, text = "Infinite Jump", onClick = function() State.InfJump = not State.InfJump end })
+
+local function inRect(px, py, x, y, w, h)
+    return px >= x and px <= x + w and py >= y and py <= y + h
+end
+local function handleTabClick(mx, my)
+    for i, tb in ipairs(tabButtons) do
+        if inRect(mx, my, GuiX + tb.rx, GuiY + tb.ry, tb.rw, tb.rh) then
+            State.ActiveTab = i
+            return true
+        end
+    end
+    return false
+end
+local function handleBtnClick(mx, my)
+    for _, btn in ipairs(Buttons) do
+        if btn.tab == State.ActiveTab then
+            if inRect(mx, my, GuiX + btn.rx, GuiY + btn.ry, btn.rw, btn.rh) then
+                pcall(btn.onClick)
+                return true
+            end
+        end
+    end
+    return false
+end
+
+local wasPressed = false
+
+RunService.Heartbeat:Connect(function()
+    if _G.MonkeySuiteGen ~= GEN then return end
+    if State.NoClip then
+        local char = LocalPlayer.Character
+        if char then
+            for _, p in ipairs(char:GetChildren()) do
+                if p.ClassName == "Part" or p.ClassName == "MeshPart" then
+                    if p.CanCollide then p.CanCollide = false end
+                end
+            end
+        end
+    end
+end)
+
+RunService.RenderStepped:Connect(function()
+    if _G.MonkeySuiteGen ~= GEN then return end
+    if not State.Fly then return end
+    local char = LocalPlayer.Character
+    local hr = char and char:FindFirstChild("HumanoidRootPart")
+    if not hr then return end
+    local cf = Camera.CFrame
+    local lv, rv = cf.LookVector, cf.RightVector
+    local mx, my, mz = 0, 0, 0
+    if iskeypressed(0x57) or iskeypressed(119) then mx = mx + lv.X; my = my + lv.Y; mz = mz + lv.Z end
+    if iskeypressed(0x53) or iskeypressed(115) then mx = mx - lv.X; my = my - lv.Y; mz = mz - lv.Z end
+    if iskeypressed(0x44) or iskeypressed(100) then mx = mx + rv.X; mz = mz + rv.Z end
+    if iskeypressed(0x41) or iskeypressed(97)  then mx = mx - rv.X; mz = mz - rv.Z end
+    if iskeypressed(0x20) or iskeypressed(32)  then my = my + 1 end
+    if iskeypressed(0x43) or iskeypressed(99)  then my = my - 1 end
+    local moveSq = mx * mx + my * my + mz * mz
+    if moveSq > 0 then
+        local inv = 1.0 / math.sqrt(moveSq)
+        local spd = State.FlySpeed
+        hr.AssemblyLinearVelocity = Vector3.new(mx * inv * spd, my * inv * spd, mz * inv * spd)
+    else
+        hr.AssemblyLinearVelocity = Vector3.zero
+    end
+end)
+
+-- (shooter / dodge / UI loops identical to V4.2, minus HoldFire branch)
+
+notify("Monkey Suite V4.3", "no HoldFire + safe dodge + cursor", 3)
+print("MONKEY SUITE V4.3 LOADED gen=" .. tostring(GEN))
