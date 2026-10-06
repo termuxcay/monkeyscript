@@ -1,13 +1,3 @@
---[[
-    MONKEY SUITE // BY: TXBAT
-    V4.3 - Matcha executor (Roblox)
-    - Auto Shoot: cursor aim via manual projection, CONTINUOUS fire (no pulse),
-      character/camera never move. F1 toggles Auto Shoot.
-    - Synthetic-fire aware menu: own trigger never cancels itself, real menu
-      clicks always release the trigger. User mouse movement pauses aim+fire.
-    - Anti Explosions, Panic TP, Save/TP Safe Spot, Fly, NoClip, Infinite Jump
-]]
-
 if _G.MonkeySuite and _G.MonkeySuite.Cleanup then pcall(_G.MonkeySuite.Cleanup) end
 
 local Running = true
@@ -176,7 +166,6 @@ local miniHalo  = WrapDraw("Circle", 16, 17, 0, 0, { Radius = 5, Filled = true, 
 local miniTitle = WrapDraw("Text", 30, 9, 0, 0, { Size = 13, Font = UI_FONT, Outline = true, Color = UI.TxtMain, Text = "MONKEY SUITE // BY: TXBAT", Visible = false })
 local miniPlus  = WrapDraw("Text", MINI_W - 32, 8, 0, 0, { Size = 16, Font = UI_FONT, Outline = true, Color = UI.ActiveBdr, Text = "[+]", Visible = false })
 
--- custom cursor (the game hides the OS cursor, so draw our own ring over the menu)
 local cursorRing = WrapDraw("Circle", 0, 0, 0, 0, { Radius = 9, Filled = false, Thickness = 1.5, Color = UI.ActiveBdr, Transparency = 1, Visible = false })
 local cursorDot  = WrapDraw("Circle", 0, 0, 0, 0, { Radius = 2, Filled = true, Color = UI.TxtActive, Transparency = 1, Visible = false })
 
@@ -262,9 +251,6 @@ local function combatDist(x, z)
 end
 
 local function findEscape(pos, dist)
-    -- NEVER land inside a bomb mark, and NEVER land on top of monkeys:
-    -- pick the direction outside all marks with the most distance from combat.
-    -- If every direction is too close to monkeys, stay put (return nil).
     local marks = readMarks()
     local bestCx, bestCz, bestScore = nil, nil, -1
     for i = 0, 7 do
@@ -289,8 +275,6 @@ local function findEscape(pos, dist)
 end
 
 local function findTarget(hr)
-    -- ignore anything glued to me (my own muzzle flash / weapon tip):
-    -- real monkey combat is always beyond MIN_TARGET_DIST
     local best, bd = nil, math.huge
     local ex = game.Workspace:FindFirstChild("ExplosionVFX")
     if hr and ex then
@@ -468,15 +452,15 @@ RunService.RenderStepped:Connect(function()
     local cf = Camera.CFrame
     local lv, rv = cf.LookVector, cf.RightVector
     local mx, my, mz = 0, 0, 0
-    if iskeypressed(0x57) or iskeypressed(119) then mx = mx + lv.X; my = my + lv.Y; mz = mz + lv.Z end
-    if iskeypressed(0x53) or iskeypressed(115) then mx = mx - lv.X; my = my - lv.Y; mz = mz - lv.Z end
-    if iskeypressed(0x44) or iskeypressed(100) then mx = mx + rv.X; mz = mz + rv.Z end
-    if iskeypressed(0x41) or iskeypressed(97)  then mx = mx - rv.X; mz = mz - rv.Z end
-    if iskeypressed(0x20) or iskeypressed(32)  then my = my + 1 end
-    if iskeypressed(0x43) or iskeypressed(99)  then my = my - 1 end
+    if iskeypressed(87) or iskeypressed(119) then mx = mx + lv.X; my = my + lv.Y; mz = mz + lv.Z end
+    if iskeypressed(83) or iskeypressed(115) then mx = mx - lv.X; my = my - lv.Y; mz = mz - lv.Z end
+    if iskeypressed(68) or iskeypressed(100) then mx = mx + rv.X; mz = mz + rv.Z end
+    if iskeypressed(65) or iskeypressed(97)  then mx = mx - rv.X; mz = mz - rv.Z end
+    if iskeypressed(32) or iskeypressed(32)  then my = my + 1 end
+    if iskeypressed(67) or iskeypressed(99)  then my = my - 1 end
     local moveSq = mx * mx + my * my + mz * mz
     if moveSq > 0 then
-        local inv = 1.0 / math.sqrt(moveSq)
+        local inv = 1 / math.sqrt(moveSq)
         local spd = State.FlySpeed
         hr.AssemblyLinearVelocity = Vector3.new(mx * inv * spd, my * inv * spd, mz * inv * spd)
     else
@@ -484,7 +468,253 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
--- (shooter / dodge / UI loops identical to V4.2, minus HoldFire branch)
+task.spawn(function()
+    while Running do
+        if _G.MonkeySuiteGen ~= GEN then break end
+        if State.AutoShoot then
+            if os.clock() < MenuBusyUntil then
+                releaseFire()
+            else
+                local char = LocalPlayer.Character
+                local hr = char and char:FindFirstChild("HumanoidRootPart")
+                if not hr then
+                    releaseFire()
+                else
+                    local target, dist = findTarget(hr)
+                    if target then
+                        local sx, sy = projectToScreen(target)
+                        if sx and sy then
+                            local mx, my = Mouse.X, Mouse.Y
+                            local now3 = os.clock()
+                            local userHolding = false
+                            if expectX and (now3 - lastScriptMove) > 0.3 then
+                                if math.abs(mx - expectX) > USER_OVERRIDE_PX or math.abs(my - expectY) > USER_OVERRIDE_PX then
+                                    expectX, expectY = mx, my
+                                    lastAimX, lastAimY = sx, sy
+                                    userHolding = true
+                                    releaseFire()
+                                    State.StatusText = "SHOOT: paused (your mouse)"
+                                end
+                            end
+                            if not userHolding then
+                                if not cursorOverMenu(mx, my) then
+                                    if (math.abs(sx - lastAimX) > AIM_MIN_MOVE_PX or math.abs(sy - lastAimY) > AIM_MIN_MOVE_PX) and (now3 - lastAimMove) > AIM_MOVE_THROTTLE then
+                                        lastAimMove = now3; lastAimX, lastAimY = sx, sy
+                                        expectX, expectY = sx, sy
+                                        lastScriptMove = now3
+                                        pcall(mousemoveabs, sx, sy + SCREEN_Y_OFFSET)
+                                    end
+                                end
+                                holdFire()
+                                local kpm = killsPerMin()
+                                State.StatusText = "SHOOT: " .. string.format("%.0f", dist) .. "m" .. (kpm and (" | " .. kpm .. "/min") or "")
+                            end
+                        else
+                            releaseFire()
+                            State.StatusText = "SHOOT: target offscreen"
+                        end
+                    else
+                        releaseFire()
+                        local left = getMonkeysLeft()
+                        State.StatusText = left and ("SHOOT: (" .. left .. " left)") or "SHOOT: scanning"
+                    end
+                end
+            end
+        else
+            releaseFire()
+        end
+        task.wait(0.1)
+    end
+end)
+
+task.spawn(function()
+    while Running do
+        if _G.MonkeySuiteGen ~= GEN then break end
+        if State.AntiBomb then
+            local char = LocalPlayer.Character
+            local hr = char and char:FindFirstChild("HumanoidRootPart")
+            if hr then
+                local pos = hr.Position
+                local marks = readMarks()
+                local inside = insideAnyMark(pos.X, pos.Z, marks)
+                local now = os.clock()
+                if inside and (now - lastDodge) > DODGE_COOLDOWN then
+                    local cx, cz = findEscape(pos, DODGE_DIST)
+                    if cx then
+                        lastDodge = now
+                        hr.CFrame = CFrame.new(cx, pos.Y + 1, cz)
+                        State.StatusText = "DODGE!"
+                    else
+                        State.StatusText = "DODGE: no safe spot!"
+                    end
+                end
+            end
+        end
+        task.wait(0.12)
+    end
+end)
+
+RunService.RenderStepped:Connect(function()
+    if _G.MonkeySuiteGen ~= GEN then return end
+    local now = os.clock()
+
+    local f1down = false
+    pcall(function() f1down = iskeypressed(F1_KEY) end)
+    if f1down and not lastF1 then
+        toggleShoot()
+    end
+    lastF1 = f1down
+
+    local pressed = ismouse1pressed()
+    local mx, my = Mouse.X, Mouse.Y
+
+    local __overMenu = cursorOverMenu(mx, my)
+    SetVisible(cursorRing, __overMenu)
+    SetVisible(cursorDot, __overMenu)
+    if __overMenu then SetPos(cursorRing, mx, my); SetPos(cursorDot, mx, my) end
+
+    if pressed and not wasPressed then
+        local overMenu = cursorOverMenu(mx, my)
+        if ShooterHolding and not overMenu then
+            syntheticPressActive = true
+        else
+            syntheticPressActive = false
+            MenuBusyUntil = now + 0.6
+            if State.Minimized then
+                if inRect(mx, my, GuiX + MINI_W - 36, GuiY + 2, 34, 30) then
+                    State.Minimized = false
+                elseif inRect(mx, my, GuiX, GuiY, MINI_W, MINI_H) then
+                    isDragging = true
+                    dragOffX, dragOffY = mx - GuiX, my - GuiY
+                end
+            else
+                if inRect(mx, my, GuiX, GuiY, GW, 42) then
+                    if inRect(mx, my, GuiX + GW - 34, GuiY + 4, 30, 30) then
+                        State.Minimized = true
+                    else
+                        isDragging = true
+                        dragOffX, dragOffY = mx - GuiX, my - GuiY
+                    end
+                elseif not handleTabClick(mx, my) and not handleBtnClick(mx, my) then
+                    if not inRect(mx, my, GuiX, GuiY, GW, GH) then
+                        if State.InfJump then
+                            local char = LocalPlayer.Character
+                            local hr = char and char:FindFirstChild("HumanoidRootPart")
+                            if hr then
+                                local vel = hr.AssemblyLinearVelocity
+                                if vel.Y < 4 then
+                                    hr.AssemblyLinearVelocity = Vector3.new(vel.X, 55, vel.Z)
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    elseif not pressed and wasPressed then
+        if syntheticPressActive then
+            syntheticPressActive = false
+        else
+            isDragging = false
+            MenuBusyUntil = now + 0.3
+        end
+    end
+    wasPressed = pressed
+
+    if isDragging then
+        MenuBusyUntil = now + 0.5
+        local vp = Camera.ViewportSize
+        local maxW = State.Minimized and MINI_W or GW
+        local maxH = State.Minimized and MINI_H or GH
+        TargetX = math.clamp(mx - dragOffX, 5, math.max(10, vp.X - maxW - 5))
+        TargetY = math.clamp(my - dragOffY, 5, math.max(10, vp.Y - maxH - 5))
+    end
+    GuiX = GuiX + (TargetX - GuiX) * 0.35
+    GuiY = GuiY + (TargetY - GuiY) * 0.35
+    if math.abs(TargetX - GuiX) < 0.5 then GuiX = TargetX end
+    if math.abs(TargetY - GuiY) < 0.5 then GuiY = TargetY end
+
+    local pulse = (math.sin(now * 3.2) + 1) * 0.5
+
+    if State.Minimized then
+        SetVisible(miniGlow, true);  SetPos(miniGlow, GuiX - 2, GuiY - 2);  SetSize(miniGlow, MINI_W + 4, MINI_H + 4)
+        SetVisible(miniBg, true);    SetPos(miniBg, GuiX, GuiY);            SetSize(miniBg, MINI_W, MINI_H)
+        SetVisible(miniBrd, true);   SetPos(miniBrd, GuiX, GuiY);           SetSize(miniBrd, MINI_W, MINI_H)
+        SetVisible(miniHalo, true);  SetPos(miniHalo, GuiX + 16, GuiY + 17); SetRadius(miniHalo, 5 + pulse * 1)
+        SetVisible(miniTitle, true); SetPos(miniTitle, GuiX + 30, GuiY + 9)
+        SetVisible(miniPlus, true);  SetPos(miniPlus, GuiX + MINI_W - 32, GuiY + 8)
+        SetVisible(mainGlow, false); SetVisible(mainBorder, false); SetVisible(mainBg, false)
+        SetVisible(headerBg, false); SetVisible(headerLine, false)
+        SetVisible(statusHalo, false); SetVisible(statusCore, false)
+        SetVisible(titleText, false); SetVisible(minBtn, false); SetVisible(statusHdr, false)
+        for _, tb in ipairs(tabButtons) do SetVisible(tb.box, false); SetVisible(tb.txt, false) end
+        for _, btn in ipairs(Buttons) do
+            SetVisible(btn.box, false); SetVisible(btn.border, false); SetVisible(btn.label, false)
+        end
+        return
+    end
+
+    SetVisible(miniGlow, false); SetVisible(miniBg, false); SetVisible(miniBrd, false)
+    SetVisible(miniTitle, false); SetVisible(miniHalo, false); SetVisible(miniPlus, false)
+
+    SetVisible(mainGlow, true);   SetPos(mainGlow, GuiX - 3, GuiY - 3);   SetSize(mainGlow, GW + 6, GH + 6)
+    SetVisible(mainBorder, true); SetPos(mainBorder, GuiX - 1, GuiY - 1); SetSize(mainBorder, GW + 2, GH + 2)
+    SetVisible(mainBg, true);     SetPos(mainBg, GuiX, GuiY);             SetSize(mainBg, GW, GH)
+    SetVisible(headerBg, true);   SetPos(headerBg, GuiX, GuiY);           SetSize(headerBg, GW, 42)
+    SetVisible(headerLine, true); SetPos(headerLine, GuiX, GuiY + 42);    SetSize(headerLine, GW, 2)
+    SetVisible(statusHalo, true); SetPos(statusHalo, GuiX + 17, GuiY + 21); SetRadius(statusHalo, 7 + pulse * 1.5)
+    SetVisible(statusCore, true); SetPos(statusCore, GuiX + 17, GuiY + 21); SetRadius(statusCore, 4)
+    SetVisible(titleText, true);  SetPos(titleText, GuiX + 31, GuiY + 12)
+    SetVisible(minBtn, true);     SetPos(minBtn, GuiX + GW - 30, GuiY + 12)
+    SetColor(minBtn, UI.TxtMuted)
+
+    SetVisible(statusHdr, true)
+    local modes = {}
+    if State.AutoShoot then table.insert(modes, "SHOOT") end
+    if State.AntiBomb then table.insert(modes, "DODGE") end
+    if State.Fly then table.insert(modes, "FLY") end
+    local hdrTxt = table.concat(modes, "+")
+    if State.StatusText ~= "" then
+        hdrTxt = State.StatusText
+    end
+    SetText(statusHdr, string.sub(hdrTxt, 1, 22))
+    SetPos(statusHdr, GuiX + GW - 160, GuiY + 15)
+    if hdrTxt ~= "" then
+        SetColor(statusHdr, UI.StatusOn)
+    end
+
+    for i, tb in ipairs(tabButtons) do
+        local active = (State.ActiveTab == i)
+        local hovered = inRect(mx, my, GuiX + tb.rx, GuiY + tb.ry, tb.rw, tb.rh)
+        SetVisible(tb.box, true)
+        SetPos(tb.box, GuiX + tb.rx, GuiY + tb.ry)
+        SetSize(tb.box, tb.rw, tb.rh)
+        SetColor(tb.box, active and UI.TabActive or (hovered and UI.BoxHover or UI.Box))
+        SetVisible(tb.txt, true)
+        SetPos(tb.txt, GuiX + tb.rx + 8, GuiY + tb.ry + 6)
+        SetColor(tb.txt, active and UI.TxtActive or UI.TxtSec)
+    end
+
+    for _, btn in ipairs(Buttons) do
+        if btn.tab == State.ActiveTab then
+            local bx, by = GuiX + btn.rx, GuiY + btn.ry
+            local hovered = inRect(mx, my, bx, by, btn.rw, btn.rh)
+            local active = false
+            if btn == btnShoot then active = State.AutoShoot end
+            if btn == btnDodge then active = State.AntiBomb end
+            if btn == btnFly then active = State.Fly end
+            if btn == btnNoclip then active = State.NoClip end
+            if btn == btnJump then active = State.InfJump end
+            local bgCol = active and (hovered and UI.ActiveHov or UI.ActiveBox) or (hovered and UI.BoxHover or UI.Box)
+            local bdrCol = active and UI.ActiveBdr or (hovered and UI.HoverBorder or UI.BoxBorder)
+            SetVisible(btn.box, true); SetPos(btn.box, bx, by); SetSize(btn.box, btn.rw, btn.rh); SetColor(btn.box, bgCol)
+            SetVisible(btn.border, true); SetPos(btn.border, bx, by); SetSize(btn.border, btn.rw, btn.rh); SetColor(btn.border, bdrCol)
+            SetVisible(btn.label, true); SetPos(btn.label, bx + 12, by + 7); SetColor(btn.label, active and UI.TxtActive or UI.TxtMain)
+        else
+            SetVisible(btn.box, false); SetVisible(btn.border, false); SetVisible(btn.label, false)
+        end
+    end
+end)
 
 notify("Monkey Suite V4.3", "no HoldFire + safe dodge + cursor", 3)
 print("MONKEY SUITE V4.3 LOADED gen=" .. tostring(GEN))
